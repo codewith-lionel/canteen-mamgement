@@ -41,6 +41,12 @@ router.put('/orders/:orderId/status', protect, kitchenOrAdmin, async (req, res) 
     order.status = status;
     const updatedOrder = await order.save();
 
+    // Emit socket event
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`order_${order.orderId}`).emit('order_updated', updatedOrder);
+    }
+
     res.json(updatedOrder);
   } catch (error) {
     console.error(error);

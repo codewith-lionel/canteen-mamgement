@@ -94,6 +94,18 @@ router.put('/orders/:orderId/verify-payment', protect, adminOnly, async (req, re
     }
 
     const updatedOrder = await order.save();
+
+    // Emit socket events
+    const io = req.app.get('io');
+    if (io) {
+      // Notify kitchen if approved
+      if (action === 'approve') {
+        io.to('kitchen').emit('new_verified_order', updatedOrder);
+      }
+      // Notify the specific order room
+      io.to(`order_${order.orderId}`).emit('order_updated', updatedOrder);
+    }
+
     res.json(updatedOrder);
   } catch (error) {
     console.error(error);

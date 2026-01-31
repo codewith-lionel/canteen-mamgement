@@ -125,6 +125,12 @@ router.put('/:orderId/submit-payment', async (req, res) => {
     order.status = 'payment_submitted';
     const updatedOrder = await order.save();
 
+    // Emit socket event to admin
+    const io = req.app.get('io');
+    if (io) {
+      io.to('admin').emit('new_payment_submitted', updatedOrder);
+    }
+
     res.json(updatedOrder);
   } catch (error) {
     console.error(error);
